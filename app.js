@@ -2,8 +2,13 @@ const express = require("express");
 const app = express();
 const port = process.env.PORT || 3000;
 
-const ProductRoute = require("./routes/productRoute");
-const UserRoute = require("./routes/userRoute");
+const productRoute = require("./routes/productRoute");
+const userRoute = require("./routes/userRoute");
+const categoryRoute = require("./routes/categoryRoute");
+const vendorRoute = require("./routes/vendorRoute");
+const serviceRoute = require("./routes/serviceRoute");
+const merchantRoute = require("./routes/merchantRoute");
+
 
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
@@ -16,8 +21,12 @@ app.get("/", (req, res) => {
 
 // Routes
 try {
-    app.use("/products", ProductRoute);
-    app.use("/users", UserRoute);
+    app.use("/products", productRoute);
+    app.use("/users", userRoute);
+    app.use("/category", categoryRoute);
+    app.use("/vendors", vendorRoute);
+    app.use("/services", serviceRoute);
+    app.use("/merchants", merchantRoute);
 } catch (err) {
     console.error("Route loading error:", err.message);
 }
