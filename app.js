@@ -1,10 +1,24 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-
-// Middleware to handle JSON requests
+const port = 3000;
+const ProductRoute = require("./routes/product");
 app.use(express.json());
-
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+app.use(
+    express.urlencoded({
+        extended: true,
+    })
+);
+app.get("/", (req, res) => {
+    res.json({ message: "ok" });
+});
+app.use("/products", ProductRoute);
+/* Error handler middleware */
+app.use((err, req, res, next) => {
+    const statusCode = err.statusCode || 500;
+    console.error(err.message, err.stack);
+    res.status(statusCode).json({ message: err.message });
+    return;
+});
+app.listen(port, () => {
+    console.log(`Afrobuildlist API listening at http://localhost:${port}`);
 });
