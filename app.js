@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const port = 3000;
 const ProductRoute = require("./routes/product");
+const userRoute = require("./routes/user");
+
 app.use(express.json());
 app.use(
     express.urlencoded({
@@ -12,6 +14,7 @@ app.get("/", (req, res) => {
     res.json({ message: "ok" });
 });
 app.use("/products", ProductRoute);
+app.use("/users", userRoute);
 /* Error handler middleware */
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
