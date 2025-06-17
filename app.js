@@ -1,27 +1,44 @@
 const express = require("express");
 const app = express();
-const port = 3000;
-const ProductRoute = require("./routes/product");
-const userRoute = require("./routes/user");
+const port = process.env.PORT || 3000;
 
+const ProductRoute = require("./routes/productRoute");
+const UserRoute = require("./routes/userRoute");
+
+// Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
-app.use(
-    express.urlencoded({
-        extended: true,
-    })
-);
+app.use(express.urlencoded({ extended: true }));
+
+// Root route
 app.get("/", (req, res) => {
-    res.json({ message: "ok" });
+    res.json({ message: "Server is running" });
 });
-app.use("/products", ProductRoute);
-app.use("/users", userRoute);
-/* Error handler middleware */
+
+// Routes
+try {
+    app.use("/products", ProductRoute);
+    app.use("/users", UserRoute);
+} catch (err) {
+    console.error("Route loading error:", err.message);
+}
+
+// 404 handler for undefined routes
+app.use((req, res, next) => {
+    res.status(404).json({ message: "Route not found" });
+});
+
+// Central error handling middleware
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
-    console.error(err.message, err.stack);
-    res.status(statusCode).json({ message: err.message });
-    return;
+    console.error("Internal error:", err.message);
+    res.status(statusCode).json({ message: err.message || "Internal Server Error" });
 });
-app.listen(port, () => {
-    console.log(`Afrobuildlist API listening at http://localhost:${port}`);
-});
+
+// Start server
+try {
+    app.listen(port, () => {
+        console.log(`Afrobuildlist API running at http://localhost:${port}`);
+    });
+} catch (err) {
+    console.error("Server failed to start:", err.message);
+}
