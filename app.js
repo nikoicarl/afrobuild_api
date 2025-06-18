@@ -8,6 +8,7 @@ const categoryRoute = require("./routes/categoryRoute");
 const vendorRoute = require("./routes/vendorRoute");
 const serviceRoute = require("./routes/serviceRoute");
 const merchantRoute = require("./routes/merchantRoute");
+const loginRoute = require("./routes/loginRoute");
 
 
 // Middleware for parsing JSON and URL-encoded data
@@ -27,6 +28,7 @@ try {
     app.use("/vendors", vendorRoute);
     app.use("/services", serviceRoute);
     app.use("/merchants", merchantRoute);
+    app.use("/login", loginRoute);
 } catch (err) {
     console.error("Route loading error:", err.message);
 }

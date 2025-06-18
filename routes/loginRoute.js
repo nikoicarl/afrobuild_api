@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const md5 = require("md5");
 
-const { query } = require("../db");
+const { query } = require("../services/db");
 const GeneralFunction = require("../models/GeneralFunctionModel");
 const gf = new GeneralFunction();
 

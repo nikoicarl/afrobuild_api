@@ -1,230 +1,136 @@
-const dateformat = require('dateformat');
 const { randomUUID } = require('crypto');
 
 class GeneralFunction {
-
-    ifEmpty (columns) {
+    ifEmpty(columns) {
         let checker = [];
         if (columns.length > 0) {
             columns.forEach(item => {
-                if (item === '' || item === undefined || item === null  || item.length < 1  || item.length === 0) {
+                if (item === '' || item === undefined || item === null || item.length < 1) {
                     checker.push('empty');
                 }
             });
-        } 
-
+        }
         return checker;
     }
 
-    checkEmpty (fieldName) {
-        if (fieldName === '' || fieldName === ' ' || fieldName === undefined || fieldName === null  || fieldName.length < 1  || fieldName.length === 0) {
-            return true;
-        } else {
-            return false;
-        }
+    checkEmpty(fieldName) {
+        return fieldName === '' || fieldName === ' ' || fieldName === undefined || fieldName === null || fieldName.length < 1;
     }
 
     getFullYear() {
-        let date = new Date();
-        return date.getUTCFullYear();
+        return new Date().getUTCFullYear();
     }
 
-    getTimeStamp () {
-        let timestamp = Date.now();
-        timestamp = timestamp.toString().substr((timestamp.length - 8), 8);
+    getTimeStamp() {
+        let timestamp = Date.now().toString().slice(-8);
         return Number(this.shuffle(timestamp));
     }
 
-    toUcwords (value) {
-        if (value === "" || value === null || value === undefined) {
-            return '';
-        } else {
-            return value.replace(/\w+/g, function(a){
-                return a.charAt(0).toUpperCase() + a.slice(1).toLowerCase();
-            });
-        }
+    toUcwords(value) {
+        return (value || '').replace(/\w+/g, a => a.charAt(0).toUpperCase() + a.slice(1).toLowerCase());
     }
 
-    shuffle (value) {
+    shuffle(value) {
         let a = value.toString().split(""), n = a.length;
-        for (var i = n - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1));
-            var tmp = a[i];
-            a[i] = a[j];
-            a[j] = tmp;
+        for (let i = n - 1; i > 0; i--) {
+            let j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
         }
         return a.join("");
     }
 
-    sumArray (value) {
-        return value.reduce(function(a,b){
-            return a + b;
-        }, 0);
+    sumArray(value) {
+        return value.reduce((a, b) => a + b, 0);
     }
 
-    fullDate (value) {
-        let inputDate = value;
-        if (inputDate == "" || inputDate == null || inputDate == undefined) {
-            return '';
-        } else {
-            let date = new Date(inputDate);
-            return date.toDateString();
-        }
+    fullDate(value) {
+        if (!value) return '';
+        return new Date(value).toDateString();
     }
 
-    fullDateDB (value) {
-        let inputDate = value;
-        if (inputDate == "" || inputDate == null || inputDate == undefined) {
-            return '';
-        } else {
-            let date = new Date(inputDate);
-            let dd = date.getUTCDate();
-            dd = dd < 10 ? '0'+dd : dd
-            let mm = date.getUTCMonth()+1;
-            mm = mm < 10 ? '0'+mm : mm
-            let yyyy = date.getUTCFullYear();
-            return yyyy+'-'+mm+'-'+dd;
-        }
+    fullDateDB(value) {
+        if (!value) return '';
+        let date = new Date(value);
+        return `${date.getUTCFullYear()}-${this.pad(date.getUTCMonth() + 1)}-${this.pad(date.getUTCDate())}`;
     }
 
-    fullDateDBNow () {
-        let date = new Date()
-        let dd = date.getUTCDate();
-        dd = dd < 10 ? '0'+dd : dd
-        let mm = date.getUTCMonth()+1;
-        mm = mm < 10 ? '0'+mm : mm
-        let yyyy = date.getUTCFullYear();
-        return yyyy+'-'+mm+'-'+dd;
+    fullDateDBNow() {
+        let date = new Date();
+        return `${date.getUTCFullYear()}-${this.pad(date.getUTCMonth() + 1)}-${this.pad(date.getUTCDate())}`;
     }
 
-    fullDateTime (value) {
-        let inputDate = value;
-        if (inputDate === "" || inputDate === null || inputDate === undefined) {
-            return '';
-        } else {
-            let date = new Date(inputDate);
-            let hh = date.getUTCHours();
-            let min = date.getUTCMinutes();
-            let sec = date.getUTCSeconds();
-            return date.toDateString()+' '+hh+':'+min+':'+sec;
-        }
+    fullDateTime(value) {
+        if (!value) return '';
+        let date = new Date(value);
+        return `${date.toDateString()} ${this.pad(date.getUTCHours())}:${this.pad(date.getUTCMinutes())}:${this.pad(date.getUTCSeconds())}`;
     }
 
-    fullTime (value) {
-        let inputDate = value;
-        if (inputDate === "" || inputDate === null || inputDate === undefined) {
-            return '';
-        } else {
-            let date = new Date(inputDate);
-            return date.toLocaleTimeString();
-        }
+    fullTime(value) {
+        if (!value) return '';
+        return new Date(value).toLocaleTimeString();
     }
 
-    dbDateFormat (value) {
-        let inputDate = value;
-        if (inputDate === "" || inputDate === null || inputDate === undefined) {
-            return '';
-        } else {
-            let date = new Date(inputDate);
-            let dd = date.getUTCDate();
-            dd = dd < 10 ? '0'+dd : dd
-            let mm = date.getUTCMonth()+1;
-            mm = mm < 10 ? '0'+mm : mm
-            let yyyy = date.getUTCFullYear();
-            let hh = date.getUTCHours();
-            let min = date.getUTCMinutes();
-            let sec = date.getUTCSeconds();
-            return yyyy+'-'+mm+'-'+dd+' '+hh+':'+min+':'+sec;
-        }
+    dbDateFormat(value) {
+        if (!value) return '';
+        let date = new Date(value);
+        return `${date.getUTCFullYear()}-${this.pad(date.getUTCMonth() + 1)}-${this.pad(date.getUTCDate())} ${this.pad(date.getUTCHours())}:${this.pad(date.getUTCMinutes())}:${this.pad(date.getUTCSeconds())}`;
     }
 
-    getCurrentWeekRange () {
-        let curr = new Date 
-        let week = []
-        
+    getCurrentWeekRange() {
+        let curr = new Date();
+        let week = [];
         for (let i = 1; i <= 7; i++) {
-            let first = curr.getDate() - curr.getDay() + i 
-            let day = new Date(curr.setDate(first)).toISOString().slice(0, 10)
-            week.push(day)
+            let first = curr.getDate() - curr.getDay() + i;
+            let day = new Date(curr.setDate(first)).toISOString().slice(0, 10);
+            week.push(day);
         }
         return [week[0], week[6]];
     }
 
-    getDateTime () {
+    getDateTime() {
         let date = new Date();
-        date = date.getUTCFullYear()+'-'+(date.getUTCMonth()+1)+'-'+date.getUTCDate()+' '+date.getUTCHours()+':'+date.getUTCMinutes()+':'+date.getUTCSeconds();
-        let todayDate = new Date(date);
-        todayDate = dateformat(todayDate, 'yyyy-mm-dd HH:MM:ss');
-        return todayDate;
+        return `${date.getUTCFullYear()}-${this.pad(date.getUTCMonth() + 1)}-${this.pad(date.getUTCDate())} ${this.pad(date.getUTCHours())}:${this.pad(date.getUTCMinutes())}:${this.pad(date.getUTCSeconds())}`;
     }
 
-    getTimeNow () {
+    getTimeNow() {
         let date = new Date();
-        date = date.getUTCFullYear()+'-'+(date.getUTCMonth()+1)+'-'+date.getUTCDate()+' '+date.getUTCHours()+':'+date.getUTCMinutes()+':'+date.getUTCSeconds();
-        let timeNow = new Date(date);
-        timeNow = dateformat(timeNow, 'HH:MM:ss');
-        return timeNow;
+        return `${this.pad(date.getUTCHours())}:${this.pad(date.getUTCMinutes())}:${this.pad(date.getUTCSeconds())}`;
     }
 
-    getDate () {
+    getDate() {
         let date = new Date();
-        date = date.getUTCFullYear()+'-'+(date.getUTCMonth()+1)+'-'+date.getUTCDate()+' '+date.getUTCHours()+':'+date.getUTCMinutes()+':'+date.getUTCSeconds();
-        let todayDate = new Date(date);
-        todayDate = dateformat(todayDate, 'yyyy-mm-dd');
-        return todayDate;
+        return `${date.getUTCFullYear()}-${this.pad(date.getUTCMonth() + 1)}-${this.pad(date.getUTCDate())}`;
     }
 
-    getDateParam (param) {
+    getDateParam(param) {
         let date = new Date(param);
-        date = date.getUTCFullYear()+'-'+(date.getUTCMonth()+1)+'-'+date.getUTCDate()+' '+date.getUTCHours()+':'+date.getUTCMinutes()+':'+date.getUTCSeconds();
-        let todayDate = new Date(date);
-        todayDate = dateformat(todayDate, 'yyyy-mm-dd');
-        return todayDate;
+        return `${date.getUTCFullYear()}-${this.pad(date.getUTCMonth() + 1)}-${this.pad(date.getUTCDate())}`;
     }
 
-    getMonth (){
+    getMonth() {
         let date = new Date();
-        let mm = date.getUTCMonth()+1; 
-        let yyyy = date.getUTCFullYear();
-        return yyyy + '-' + (mm < 10 ? '0'+mm : mm);
+        return `${date.getUTCFullYear()}-${this.pad(date.getUTCMonth() + 1)}`;
     }
 
-    formatNumber (num) {
+    formatNumber(num) {
         return num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
     }
 
     getMonthString(month) {
-        if (month.toString() == '01') {
-            return 'January';
-        } else if (month.toString() == '02') {
-            return 'February';
-        } else if (month.toString() == '03') {
-            return 'March';
-        } else if (month.toString() == '04') {
-            return 'April';
-        } else if (month.toString() == '05') {
-            return 'May';
-        } else if (month.toString() == '06') {
-            return 'June';
-        } else if (month.toString() == '07') {
-            return 'July';
-        } else if (month.toString() == '08') {
-            return 'August';
-        } else if (month.toString() == '09') {
-            return 'September';
-        } else if (month.toString() == '10') {
-            return 'October';
-        } else if (month.toString() == '11') {
-            return 'November';
-        } else {
-            return 'December';
-        }
+        const names = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        return names[Number(month) - 1] || '';
     }
 
     uuid() {
-        return randomUUID(); // Generates a UUID v4
+        return randomUUID();
+    }
+
+    pad(num) {
+        return String(num).padStart(2, '0');
     }
 }
-
 
 module.exports = GeneralFunction;
