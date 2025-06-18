@@ -61,15 +61,18 @@ router.post("/", async (req, res) => {
 
         const melody2 = md5(userId);
 
-        // Get setup config
-        const setupData = await query("SELECT * FROM setup LIMIT 1", []);
+        // Get user config
+        const userData = await query(
+            "SELECT * FROM user WHERE userid = ? ",
+            [userId]
+        );
 
         return res.status(200).json({
             type: "success",
             message: "Logged in successfully",
             melody1,
             melody2,
-            setupData: setupData[0] || {},
+            userData: userData[0] || {},
         });
 
     } catch (err) {
