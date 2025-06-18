@@ -39,7 +39,7 @@ router.post("/", async (req, res) => {
         const userId = user.userid;
 
         const result = await query(
-            "INSERT INTO session (sessionid, userid, activity, logtime, logofftime) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO session (sessionid, userid, activity, datetime, logout) VALUES (?, ?, ?, ?, ?)",
             [sessionId, userId, "logged in successfully", gf.getDateTime(), null]
         );
 
