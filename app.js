@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -14,6 +15,7 @@ const loginRoute = require("./routes/loginRoute");
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 // Root route
 app.get("/", (req, res) => {
@@ -23,7 +25,7 @@ app.get("/", (req, res) => {
 // Routes
 try {
     app.use("/products", productRoute);
-    app.use("/users", userRoute);
+    app.use("/user", userRoute);
     app.use("/category", categoryRoute);
     app.use("/vendors", vendorRoute);
     app.use("/services", serviceRoute);
