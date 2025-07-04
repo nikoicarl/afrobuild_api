@@ -12,11 +12,10 @@ const host = process.env.HOST || "localhost";
 
 // === Logging Setup ===
 const logFilePath = path.join(__dirname, "server.log");
-
 function logToFile(message) {
     const timestamp = new Date().toISOString();
     const fullMessage = `[${timestamp}] ${message}\n`;
-    fs.appendFile(logFilePath, fullMessage, (err) => {
+    fs.appendFile(logFilePath, fullMessage, err => {
         if (err) console.error("Error writing to log file:", err.message);
     });
 }
@@ -24,7 +23,14 @@ function logToFile(message) {
 // === Middleware ===
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+
+// === Allow All CORS ===
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+}));
+
 
 // === Routes ===
 const routes = [
@@ -43,7 +49,7 @@ app.get("/", (req, res) => {
     logToFile("Accessed root route");
 });
 
-// === Apply Routes Safely ===
+// === Apply Routes ===
 routes.forEach(({ path, route }) => {
     try {
         app.use(path, route);
@@ -54,7 +60,7 @@ routes.forEach(({ path, route }) => {
     }
 });
 
-// === 404 Not Found ===
+// === 404 Not Found Handler ===
 app.use((req, res) => {
     const msg = `404 - Not Found: ${req.originalUrl}`;
     res.status(404).json({ message: "Route not found" });
@@ -79,4 +85,3 @@ app.listen(port, () => {
     console.log(startMsg);
     logToFile(startMsg);
 });
-
