@@ -1,3 +1,5 @@
+require('dotenv').config({ path: 'system.env' });
+
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -5,6 +7,8 @@ const path = require("path");
 
 const app = express();
 const port = process.env.PORT || 3000;
+const environment = process.env.NODE_ENV || "development";
+const host = process.env.HOST || "localhost";
 
 // === Logging Setup ===
 const logFilePath = path.join(__dirname, "server.log");
@@ -67,7 +71,11 @@ app.use((err, req, res, next) => {
 
 // === Start Server ===
 app.listen(port, () => {
-    const startMsg = `Afrobuildlist API running at http://localhost:${port}`;
+    const baseUrl = environment === "production"
+        ? `https://${host}`
+        : `http://${host}:${port}`;
+
+    const startMsg = `Afrobuildlist API running in ${environment} mode at ${baseUrl}`;
     console.log(startMsg);
     logToFile(startMsg);
 });
