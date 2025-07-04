@@ -47,7 +47,7 @@ router.post("/", async (req, res) => {
         }
 
         // Generate unique numeric userid
-        const userId = BigInt(Date.now()) * 1000n + BigInt(Math.floor(Math.random() * 1000));
+        const userId = gf.getTimeStamp();
 
         // Hash password
         const hashedPassword = md5(password);
@@ -56,7 +56,7 @@ router.post("/", async (req, res) => {
         const result = await query(
             `INSERT INTO user 
         (userid, first_name, last_name, phone, email, address, username, password, status, date_time, sessionid, user_role) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)`,
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, '0')`,
             [
                 userId.toString(),
                 first_name,
@@ -66,7 +66,7 @@ router.post("/", async (req, res) => {
                 address || null,
                 username,
                 hashedPassword,
-                "active"
+                "pending", // Default status
             ]
         );
 
