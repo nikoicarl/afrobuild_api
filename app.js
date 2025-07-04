@@ -1,64 +1,73 @@
 const express = require("express");
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
+const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-const logFilePath = path.join(__dirname, 'server.log');
+// === Logging Setup ===
+const logFilePath = path.join(__dirname, "server.log");
+
 function logToFile(message) {
     const timestamp = new Date().toISOString();
-    fs.appendFile(logFilePath, `[${timestamp}] ${message}\n`, err => {
-        if (err) console.error('Log write error:', err);
+    const fullMessage = `[${timestamp}] ${message}\n`;
+    fs.appendFile(logFilePath, fullMessage, (err) => {
+        if (err) console.error("Error writing to log file:", err.message);
     });
 }
 
-const productRoute = require("./routes/productRoute");
-const userRoute = require("./routes/userRoute");
-const categoryRoute = require("./routes/categoryRoute");
-const vendorRoute = require("./routes/vendorRoute");
-const serviceRoute = require("./routes/serviceRoute");
-const merchantRoute = require("./routes/merchantRoute");
-const loginRoute = require("./routes/loginRoute");
-
+// === Middleware ===
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
+// === Routes ===
+const routes = [
+    { path: "/products", route: require("./routes/productRoute") },
+    { path: "/user", route: require("./routes/userRoute") },
+    { path: "/category", route: require("./routes/categoryRoute") },
+    { path: "/vendors", route: require("./routes/vendorRoute") },
+    { path: "/services", route: require("./routes/serviceRoute") },
+    { path: "/merchants", route: require("./routes/merchantRoute") },
+    { path: "/login", route: require("./routes/loginRoute") },
+];
+
+// === Root Route ===
 app.get("/", (req, res) => {
-    res.json({ message: "Server is running" });
+    res.json({ message: "Afrobuildlist API is running" });
+    logToFile("Accessed root route");
 });
 
-try {
-    app.use("/products", productRoute);
-    app.use("/user", userRoute);
-    app.use("/category", categoryRoute);
-    app.use("/vendors", vendorRoute);
-    app.use("/services", serviceRoute);
-    app.use("/merchants", merchantRoute);
-    app.use("/login", loginRoute);
-} catch (err) {
-    logToFile(`Route loading error: ${err.message}`);
-}
+// === Apply Routes Safely ===
+routes.forEach(({ path, route }) => {
+    try {
+        app.use(path, route);
+    } catch (err) {
+        const errorMsg = `Failed to load route '${path}': ${err.message}`;
+        console.error(errorMsg);
+        logToFile(errorMsg);
+    }
+});
 
-app.use((req, res, next) => {
+// === 404 Not Found ===
+app.use((req, res) => {
+    const msg = `404 - Not Found: ${req.originalUrl}`;
     res.status(404).json({ message: "Route not found" });
-    logToFile(`404 - Not Found: ${req.originalUrl}`);
+    logToFile(msg);
 });
 
+// === Central Error Handler ===
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
-    logToFile(`Internal error: ${err.message}`);
+    const errorMsg = `Error ${statusCode}: ${err.message}`;
     res.status(statusCode).json({ message: err.message || "Internal Server Error" });
+    logToFile(errorMsg);
 });
 
-try {
-    app.listen(port, () => {
-        const msg = `Afrobuildlist API running at http://localhost:${port}`;
-        console.log(msg);
-        logToFile(msg);
-    });
-} catch (err) {
-    logToFile(`Server failed to start: ${err.message}`);
-}
+// === Start Server ===
+app.listen(port, () => {
+    const startMsg = `Afrobuildlist API running at http://localhost:${port}`;
+    console.log(startMsg);
+    logToFile(startMsg);
+});
