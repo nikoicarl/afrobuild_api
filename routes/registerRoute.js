@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
         const merchantResult = await query(
             `INSERT INTO merchant 
             (merchantid, name, phone, email, address, location, status, date_time, sessionid)
-            VALUES (?, ?, ?, ?, ?, ?, 'active', NOW(), NULL)`,
+            VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW(), NULL)`,
             [
                 merchantId.toString(),
                 merchant_name,
