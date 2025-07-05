@@ -33,8 +33,36 @@ router.post("/", async (req, res) => {
     }
 
     try {
-        // Generate unique IDs
+        // ✅ Check if merchant with the same name already exists
+        const [existingMerchant] = await query(
+            `SELECT * FROM merchant WHERE name = ?`,
+            [merchant_name]
+        );
+
+        if (existingMerchant) {
+            return res.status(409).json({
+                type: "warning",
+                message: "Merchant with this name already exists",
+            });
+        }
+
+        // Generate unique merchant ID
         const merchantId = gf.getTimeStamp();
+
+        // ✅ Check if service name already exists for the merchant name
+        const [serviceCheck] = await query(
+            `SELECT s.* FROM service s
+                JOIN merchant m ON s.merchantid = m.merchantid
+                WHERE m.name = ? AND s.name = ?`,
+            [merchant_name, service_name]
+        );
+
+        if (serviceCheck) {
+            return res.status(409).json({
+                type: "warning",
+                message: "Service with this name already exists for this merchant",
+            });
+        }
 
         // Insert merchant
         const merchantResult = await query(
@@ -57,7 +85,7 @@ router.post("/", async (req, res) => {
                 .json({ type: "error", message: "Failed to create merchant" });
         }
 
-        // Insert service with merchantid
+        // Insert service with the new merchantid
         const serviceId = gf.getTimeStamp();
 
         const serviceResult = await query(
@@ -70,7 +98,7 @@ router.post("/", async (req, res) => {
                 service_description || null,
                 service_price,
                 category_id,
-                merchantId.toString(),   // Assign merchant here
+                merchantId.toString(),
             ]
         );
 
