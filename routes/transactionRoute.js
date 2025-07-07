@@ -40,7 +40,6 @@ router.post("/", async (req, res) => {
                 message: "Failed to create transaction.",
             });
         }
-        console.log(cart);
 
         // Insert all cart items using a single batch query (optional optimization)
         const transactionItems = Object.values(cart).map((item) => [
