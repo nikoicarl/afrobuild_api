@@ -1,4 +1,4 @@
-const { randomUUID } = require('crypto');
+const { randomUUID, randomBytes, pbkdf2Sync } = require('crypto');
 
 class GeneralFunction {
     ifEmpty(columns) {
@@ -130,6 +130,26 @@ class GeneralFunction {
 
     pad(num) {
         return String(num).padStart(2, '0');
+    }
+
+
+    /**
+     * Hash password using pbkdf2Sync with SHA512
+     * Returns: salt + ':' + hashed password (hex)
+     */
+    hashPassword(password) {
+        const salt = randomBytes(16).toString('hex');
+        const hash = pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+        return `${salt}:${hash}`;
+    }
+
+    /**
+     * Verify password by hashing input and comparing with stored hash
+     */
+    verifyPassword(password, storedHash) {
+        const [salt, originalHash] = storedHash.split(':');
+        const hash = pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+        return hash === originalHash;
     }
 }
 
