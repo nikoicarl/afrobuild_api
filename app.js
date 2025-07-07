@@ -42,7 +42,8 @@ const routes = [
     { path: "/merchants", route: require("./routes/merchantRoute") },
     { path: "/login", route: require("./routes/loginRoute") },
     { path: "/signup", route: require("./routes/signupRoute") },
-    { path: "/register", route: require("./routes/registerRoute") }
+    { path: "/register", route: require("./routes/registerRoute") },
+    { path: "/transaction", route: require("./routes/transactionRoute") }
 ];
 
 // === Root Route ===
