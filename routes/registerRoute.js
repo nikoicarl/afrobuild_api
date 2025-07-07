@@ -21,6 +21,7 @@ router.post("/", async (req, res) => {
     // Validate required fields
     const checkEmpty = gf.ifEmpty([
         merchant_name,
+        merchant_email,
         service_name,
         service_price,
         category_id,
@@ -33,92 +34,109 @@ router.post("/", async (req, res) => {
     }
 
     try {
-        // ✅ Check if merchant with the same name already exists
-        const [existingMerchant] = await query(
-            `SELECT * FROM merchant WHERE name = ?`,
-            [merchant_name]
+        // 1. Get roleid for 'merchant'
+        const [roleRow] = await query(
+            `SELECT roleid FROM role WHERE name = 'merchant' AND status = 'active' LIMIT 1`
         );
-
-        if (existingMerchant) {
-            return res.status(409).json({
-                type: "warning",
-                message: "Merchant with this name already exists",
+        if (!roleRow) {
+            return res.status(500).json({
+                type: "error",
+                message: "Merchant role not found.",
             });
         }
 
-        // Generate unique merchant ID
-        const merchantId = gf.getTimeStamp();
+        const merchantRoleId = roleRow.roleid;
 
-        // ✅ Check if service name already exists for the merchant name
-        const [serviceCheck] = await query(
-            `SELECT s.* FROM service s
-                JOIN merchant m ON s.merchantid = m.merchantid
-                WHERE m.name = ? AND s.name = ?`,
-            [merchant_name, service_name]
+        // 2. Check if user already exists
+        let [merchantUser] = await query(
+            `SELECT * FROM users WHERE email = ? AND user_role = ? LIMIT 1`,
+            [merchant_email, merchantRoleId]
         );
 
-        if (serviceCheck) {
+        let userId;
+
+        if (merchantUser) {
+            userId = merchantUser.userid;
+        } else {
+            // 3. Insert new merchant user
+            userId = gf.getTimeStamp();
+            const nameParts = merchant_name.trim().split(" ");
+            const firstName = nameParts[0];
+            const lastName = nameParts.slice(1).join(" ") || "";
+
+            const insertUser = await query(
+                `INSERT INTO users
+                (userid, first_name, last_name, phone, email, address, username, password, user_role, status, date_time, sessionid)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW(), NULL)`,
+                [
+                    userId,
+                    firstName,
+                    lastName,
+                    merchant_phone || null,
+                    merchant_email,
+                    merchant_address || null,
+                    merchant_email,
+                    gf.hashPassword(merchant_email), // Replace with proper hash
+                    merchantRoleId,
+                ]
+            );
+
+            if (!insertUser.affectedRows) {
+                return res.status(500).json({
+                    type: "error",
+                    message: "Failed to register merchant user.",
+                });
+            }
+        }
+
+        // 4. Check if service already exists for this user
+        const [existingService] = await query(
+            `SELECT * FROM service WHERE userid = ? AND name = ? LIMIT 1`,
+            [userId, service_name]
+        );
+
+        if (existingService) {
             return res.status(409).json({
                 type: "warning",
-                message: "Service with this name already exists for this merchant",
+                message: "This service already exists for this merchant.",
             });
         }
 
-        // Insert merchant
-        const merchantResult = await query(
-            `INSERT INTO merchant 
-            (merchantid, name, phone, email, address, location, status, date_time, sessionid)
-            VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW(), NULL)`,
-            [
-                merchantId.toString(),
-                merchant_name,
-                merchant_phone || null,
-                merchant_email || null,
-                merchant_address || null,
-                merchant_location || null,
-            ]
-        );
-
-        if (!merchantResult.affectedRows) {
-            return res
-                .status(500)
-                .json({ type: "error", message: "Failed to create merchant" });
-        }
-
-        // Insert service with the new merchantid
+        // 5. Insert the new service
         const serviceId = gf.getTimeStamp();
-
-        const serviceResult = await query(
+        const insertService = await query(
             `INSERT INTO service 
-            (serviceid, name, description, price, categoryid, merchantid, documents, datetime, status)
+            (serviceid, name, description, price, categoryid, userid, documents, datetime, status)
             VALUES (?, ?, ?, ?, ?, ?, NULL, NOW(), 'active')`,
             [
-                serviceId.toString(),
+                serviceId,
                 service_name,
                 service_description || null,
                 service_price,
                 category_id,
-                merchantId.toString(),
+                userId
             ]
         );
 
-        if (!serviceResult.affectedRows) {
-            return res
-                .status(500)
-                .json({ type: "error", message: "Failed to create service" });
+        if (!insertService.affectedRows) {
+            return res.status(500).json({
+                type: "error",
+                message: "Failed to create service.",
+            });
         }
 
         return res.status(201).json({
             type: "success",
-            message: "Merchant and service registered successfully",
-            merchantId: merchantId.toString(),
+            message: "Merchant and service registered successfully.",
+            userId: userId.toString(),
             serviceId: serviceId.toString(),
         });
     } catch (err) {
-        console.error("Register error:", err);
-        return res
-            .status(500)
-            .json({ type: "error", message: "Server error: " + err.message });
+        console.error("Error during merchant/service registration:", err);
+        return res.status(500).json({
+            type: "error",
+            message: "Server error: " + err.message,
+        });
     }
 });
 
