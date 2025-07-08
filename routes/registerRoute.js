@@ -1,9 +1,20 @@
 const express = require("express");
 const router = express.Router();
+const nodemailer = require("nodemailer");
 
 const { query } = require("../services/db");
 const GeneralFunction = require("../models/GeneralFunctionModel");
 const gf = new GeneralFunction();
+
+// Setup your email transporter (use your SMTP or a service like Gmail, SendGrid, etc.)
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'cnikoi70@gmail.com',
+        pass: 'gbzy bhrw emzn fhcf', // See notes below
+    },
+});
+
 
 router.post("/", async (req, res) => {
     const {
@@ -49,6 +60,7 @@ router.post("/", async (req, res) => {
         );
 
         let finalUserId = userId;
+        const defaultPassword = gf.generateRandomPassword(10);
 
         if (!existingUser) {
             const insertUser = await query(
@@ -73,6 +85,36 @@ router.post("/", async (req, res) => {
                     message: "Failed to register user.",
                 });
             }
+
+            // Send email with username and password
+            const mailOptions = {
+                from: '"AfroBuildList" <your-email@example.com>', // sender address
+                to: user_email, // receiver
+                subject: "Your AfroBuildList Account Credentials",
+                text: `Hello ${firstName},
+
+                    Thank you for registering on AfroBuildList.
+
+                    Here are your login credentials:
+
+                    Username: ${user_email}
+                    Password: ${defaultPassword}
+
+                    Please log in and change your password as soon as possible.
+
+                    Best regards,
+                    AfroBuildList Team`,
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error("Error sending email:", error);
+                    // You can decide to continue or notify user email failed
+                } else {
+                    console.log("Email sent: " + info.response);
+                }
+            });
+
         } else {
             finalUserId = existingUser.userid;
         }

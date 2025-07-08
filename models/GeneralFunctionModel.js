@@ -151,6 +151,15 @@ class GeneralFunction {
         const hash = pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
         return hash === originalHash;
     }
+
+    generateRandomPassword(length = 8) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?';
+    let password = '';
+    for (let i = 0; i < length; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+}
 }
 
 module.exports = GeneralFunction;
