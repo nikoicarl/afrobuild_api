@@ -1,4 +1,5 @@
-const { randomUUID, randomBytes, pbkdf2Sync } = require('crypto');
+const { randomUUID } = require('crypto');
+const md5 = require('md5');
 
 class GeneralFunction {
     ifEmpty(columns) {
@@ -138,28 +139,24 @@ class GeneralFunction {
      * Returns: salt + ':' + hashed password (hex)
      */
     hashPassword(password) {
-        const salt = randomBytes(16).toString('hex');
-        const hash = pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
-        return `${salt}:${hash}`;
+        return md5(password);
     }
 
     /**
      * Verify password by hashing input and comparing with stored hash
      */
     verifyPassword(password, storedHash) {
-        const [salt, originalHash] = storedHash.split(':');
-        const hash = pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
-        return hash === originalHash;
+        return md5(password) === storedHash;
     }
 
     generateRandomPassword(length = 8) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?';
-    let password = '';
-    for (let i = 0; i < length; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?';
+        let password = '';
+        for (let i = 0; i < length; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return password;
     }
-    return password;
-}
 }
 
 module.exports = GeneralFunction;
