@@ -1,3 +1,5 @@
+require('dotenv').config(); // Load .env at the top
+
 const express = require("express");
 const router = express.Router();
 const nodemailer = require("nodemailer");
@@ -10,8 +12,8 @@ const gf = new GeneralFunction();
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-        user: "cnikoi70@gmail.com",
-        pass: "gbzy bhrw emzn fhcf",
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     },
 });
 
@@ -51,7 +53,6 @@ router.post("/", async (req, res) => {
         const firstName = nameParts[0];
         const lastName = nameParts.slice(1).join(" ") || "";
 
-        // Check if user already exists with same role
         const [existingUser] = await query(
             `SELECT * FROM user WHERE email = ? AND user_role = ? LIMIT 1`,
             [user_email, register_category]
@@ -61,11 +62,10 @@ router.post("/", async (req, res) => {
         const defaultPassword = gf.generateRandomPassword(10);
 
         if (!existingUser) {
-            // Insert user with md5 hashed random password
             const insertUser = await query(
                 `INSERT INTO user
-          (userid, first_name, last_name, phone, email, username, password, user_role, status, date_time, sessionid)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW(), NULL)`,
+            (userid, first_name, last_name, phone, email, username, password, user_role, status, date_time, sessionid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW(), NULL)`,
                 [
                     userId,
                     firstName,
@@ -85,9 +85,8 @@ router.post("/", async (req, res) => {
                 });
             }
 
-            // Send email with credentials
             const mailOptions = {
-                from: '"AfroBuildList" <cnikoi70@gmail.com>',
+                from: `"AfroBuildList" <${process.env.EMAIL_USER}>`,
                 to: user_email,
                 subject: "Your AfroBuildList Account Credentials",
                 text: `Hello ${firstName},
@@ -116,10 +115,8 @@ AfroBuildList Team`,
             finalUserId = existingUser.userid;
         }
 
-        // Determine table for product or service
         const checkTable = service_or_product === "product" ? "product" : "service";
 
-        // Check if the service or product already exists for user
         const [existing] = await query(
             `SELECT * FROM ${checkTable} WHERE userid = ? AND name = ? LIMIT 1`,
             [finalUserId, service_name]
@@ -136,7 +133,6 @@ AfroBuildList Team`,
 
         const categories = Array.isArray(category_id) ? category_id : [category_id];
 
-        // Insert entries for all categories selected
         const insertPromises = categories.map((catId) =>
             query(
                 `INSERT INTO ${checkTable} 
