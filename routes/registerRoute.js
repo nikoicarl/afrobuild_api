@@ -172,7 +172,7 @@ router.post("/", async (req, res) => {
             query(
                 `INSERT INTO ${checkTable} 
           (${checkTable}id, name, description, price, categoryid, userid, documents, datetime, status)
-          VALUES (?, ?, ?, ?, ?, ?, NULL, NOW(), 'pending')`,
+          VALUES (?, ?, ?, ?, ?, ?, NULL, NOW(), 'active')`,
                 [entryId, service_name, service_description || null, service_price, catId, finalUserId]
             )
         );

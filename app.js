@@ -49,7 +49,8 @@ const routes = [
     { path: "/forgot-password", route: require("./routes/passwordRoute") },
     { path: "/reset-password", route: require("./routes/resetPasswordRoute") },
     { path: "/change-password", route: require("./routes/changePasswordRoute") },
-    { path: "/orders", route: require("./routes/orderRoute") }
+    { path: "/orders", route: require("./routes/orderRoute") },
+    { path: "/update-profile", route: require("./routes/updateProfileRoute") }
 ];
 
 // === Root Route ===
