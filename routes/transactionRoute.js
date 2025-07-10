@@ -6,7 +6,7 @@ const GeneralFunction = require("../models/GeneralFunctionModel");
 const gf = new GeneralFunction();
 
 router.post("/", async (req, res) => {
-    const { cart, user } = req.body;
+    const { cart, user, payment_method } = req.body;
 
     // Basic validation
     if (!user || !user.id || !cart || Object.keys(cart).length === 0) {
@@ -29,9 +29,9 @@ router.post("/", async (req, res) => {
         // Insert main transaction record
         const transactionResult = await query(
             `INSERT INTO transaction 
-       (transactionid, userid, amount, message, datetime, status)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-            [transactionId, user.id, totalAmount, "Checkout initiated", now, "pending"]
+       (transactionid, userid, amount, message, payment_method, datetime, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [transactionId, user.id, totalAmount, "Checkout initiated", payment_method, now, "pending"]
         );
 
         if (!transactionResult.affectedRows) {
