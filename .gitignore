@@ -9,3 +9,4 @@ node_modules
 
 # Env files
 .env
+system.env
