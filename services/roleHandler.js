@@ -7,7 +7,7 @@ async function getMultiple(page = 1) {
     const rows = await db.query(
         `SELECT *
             FROM role
-            WHERE status != 'admin'
+            WHERE status != 'admin' AND name  NOT LIKE 'customer%'
             LIMIT ${offset}, ${config.listPerPage}`
     );
     const data = helper.emptyOrRows(rows);
