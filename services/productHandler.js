@@ -6,7 +6,7 @@ async function getMultiple(page = 1) {
     const offset = helper.getOffset(page, config.listPerPage);
     const rows = await db.query(
         `SELECT *
-    FROM product LIMIT ${offset},${config.listPerPage}`
+    FROM product WHERE status = 'active' LIMIT ${offset},${config.listPerPage}`
     );
     const data = helper.emptyOrRows(rows);
     const meta = { page };
