@@ -70,6 +70,16 @@ router.post("/", async (req, res) => {
             });
         }
 
+        // Get the roleid for 'customer' from role table
+        const roleResult = await query(
+            "SELECT roleid FROM role WHERE name = ? LIMIT 1",
+            ["customer"]
+        );
+        if (roleResult.length === 0) {
+            return res.status(500).json({ type: "error", message: "Role 'customer' not found" });
+        }
+        const customerRoleId = roleResult[0].roleid;
+
         // Generate unique numeric userid
         const userId = gf.getTimeStamp();
 
@@ -90,7 +100,7 @@ router.post("/", async (req, res) => {
                 username,
                 hashedPassword,
                 "active",
-                0, // numeric user_role
+                customerRoleId, // numeric user_role
             ]
         );
 
