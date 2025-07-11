@@ -50,7 +50,8 @@ const routes = [
     { path: "/reset-password", route: require("./routes/resetPasswordRoute") },
     { path: "/change-password", route: require("./routes/changePasswordRoute") },
     { path: "/orders", route: require("./routes/orderRoute") },
-    { path: "/update-profile", route: require("./routes/updateProfileRoute") }
+    { path: "/update-profile", route: require("./routes/updateProfileRoute") },
+    { path: "/auth/google", route: require("./routes/googleAuth") }
 ];
 
 // === Root Route ===
