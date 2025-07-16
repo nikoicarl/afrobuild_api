@@ -8,7 +8,7 @@ const config = {
         database: process.env.DB_NAME || "afrobuild_db",
         connectTimeout: 60000
     },
-    listPerPage: 10,
+    listPerPage: 1000,
 };
 
 module.exports = config;
