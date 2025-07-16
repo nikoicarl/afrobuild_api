@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { query } = require("../services/db");
-const fetch = require("node-fetch");
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 router.post("/", async (req, res) => {
     const accessToken = req.body?.access_token;
