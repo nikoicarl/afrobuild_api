@@ -40,6 +40,7 @@ const routes = [
     { path: "/vendors", route: require("./routes/vendorRoute") },
     { path: "/services", route: require("./routes/serviceRoute") },
     { path: "/merchants", route: require("./routes/merchantRoute") },
+    { path: "/suppliers", route: require("./routes/supplierRoute") },
     { path: "/login", route: require("./routes/loginRoute") },
     { path: "/signup", route: require("./routes/signupRoute") },
     { path: "/register", route: require("./routes/registerRoute") },
