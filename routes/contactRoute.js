@@ -1,5 +1,5 @@
 require('dotenv').config({ path: './system.env' });
-
+const rateLimit = require("express-rate-limit");
 const express = require("express");
 const router = express.Router();
 const nodemailer = require("nodemailer");
@@ -17,7 +17,24 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-router.post("/", async (req, res) => {
+const contactLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5,                  // 5 messages per IP
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+
+router.post("/", contactLimiter, async (req, res) => {
+
+    // Honeypot check
+    if (req.body.company) {
+        return res.status(400).json({
+            type: "error",
+            message: "Invalid submission"
+        });
+    }
+    
     const { name, email, message } = req.body;
 
     const checkEmpty = gf.ifEmpty([name, email, message]);
