@@ -4,6 +4,7 @@ const express = require("express");
 const router = express.Router();
 const nodemailer = require("nodemailer");
 const md5 = require("md5");
+const rateLimit = require("express-rate-limit");
 
 const { query } = require("../services/db");
 const GeneralFunction = require("../models/GeneralFunctionModel");
@@ -19,7 +20,14 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-router.post("/", async (req, res) => {
+const registerLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+router.post("/", registerLimiter, async (req, res) => {
 
     // Honeypot check
     if (req.body.company) {
