@@ -3,6 +3,7 @@ require('dotenv').config({ path: './system.env' });
 const express = require("express");
 const router = express.Router();
 const md5 = require("md5");
+const rateLimit = require("express-rate-limit");
 const nodemailer = require("nodemailer");
 
 const { query } = require("../services/db");
@@ -26,7 +27,25 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-router.post("/", async (req, res) => {
+
+const registerLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+
+router.post("/", registerLimiter, async (req, res) => {
+
+    // Honeypot check
+    if (req.body.company) {
+        return res.status(400).json({
+            type: "error",
+            message: "Invalid submission"
+        });
+    }
+
     const {
         first_name,
         last_name,

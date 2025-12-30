@@ -20,6 +20,15 @@ const transporter = nodemailer.createTransport({
 });
 
 router.post("/", async (req, res) => {
+
+    // Honeypot check
+    if (req.body.company) {
+        return res.status(400).json({
+            type: "error",
+            message: "Invalid submission"
+        });
+    }
+
     const {
         user_fullname,
         user_email,
